@@ -7,7 +7,8 @@ from openai import OpenAI
 
 # Local imports
 from speech_to_txt import AudioTranscriber
-from openai_calls import GPTTTSPlayer
+from openai_calls import GPTTTSPlayer, TTSGenerator
+from conversation_manager import ConversationManager
 
 # Audio recording parameters
 CHUNK = 1024
@@ -96,41 +97,36 @@ def save_audio_as_ogg(audio_data, filename):
 # Initialize the conversation history
 conversation_history = ""
 
-def process_audio_chunk(ogg_file_path):
-    """
-    Process the OGG audio file:
-    - Transcribe it using AudioTranscriber.
-    - Interact with GPT using GPTTTSPlayer.
-    """
-    # Use the pre-initialized Transcriber and Player
-    global transcriber, player, conversation_history
+def process_audio_chunk(ogg_file_path):  
+    """  
+    Process the OGG audio file:  
+    - Transcribe it using AudioTranscriber.  
+    - Interact with GPT using GPTTTSPlayer.  
+    """  
+    # Use the pre-initialized Transcriber, Player, and ConversationManager  
+    global transcriber, player, conversation_manager
 
-    # Transcribe the audio file
-    transcription_text = transcriber.transcribe_audio(ogg_file_path)
+    # Transcribe the audio file  
+    transcription_text = transcriber.transcribe_audio(ogg_file_path)  
     print("Transcription result:", transcription_text)
 
-    # Check if transcription was successful
-    if transcription_text:
-        # Update the conversation history
-        if conversation_history:
-            # Append the new message to the history
-            conversation_history += f"\nUser: {transcription_text}"
-        else:
-            # Start the conversation history
-            conversation_history = f"User: {transcription_text}"
+    # Check if transcription was successful  
+    if transcription_text:  
+        # Add user's message to conversation history
+        conversation_manager.add_message("user", transcription_text)
 
-        # Construct the message to send to player.chat, including current message separately
-        full_prompt = (
-            f"These are the previous user messages:\n{conversation_history}\n\n"
-            f"This is the current message:\n{transcription_text}"
-        )
+        # Get conversation context messages
+        context_messages = conversation_manager.get_conversation_context()
 
-        # Interact with GPT and generate TTS audio
-        assistant_response = player.chat(full_prompt)
+        # Interact with GPT and generate TTS audio  
+        assistant_response_text = player.chat(context_messages)
 
-        # Append the assistant's response to the conversation history
-        conversation_history += f"\nAssistant: {assistant_response}"
-    else:
+        # Add assistant's response to the conversation history
+        conversation_manager.add_message("assistant", assistant_response_text)
+        
+        # Optionally, print the assistant's response
+        print("Assistant response:", assistant_response_text)
+    else:  
         print("No transcription available.")
         
 def listen_and_process():
@@ -158,14 +154,20 @@ def listen_and_process():
             print("Continuing to listen...\n")
 
 # Initialize the transcriber and GPT player at the beginning
-if __name__ == '__main__':
-    # Initialize the OpenAI client
+if __name__ == '__main__':  
+    # Initialize the OpenAI client  
     client = OpenAI()
 
-    # Create an instance of AudioTranscriber
+    # Create an instance of AudioTranscriber  
     transcriber = AudioTranscriber()
 
-    # Create an instance of GPTTTSPlayer with the initialized client
-    player = GPTTTSPlayer(client)
+    # Initialize TTSGenerator
+    tts_generator = TTSGenerator(client, tts_model="tts-1", voice="alloy", speed=1.25)
+
+    # Create an instance of GPTTTSPlayer with the initialized client and TTSGenerator  
+    player = GPTTTSPlayer(client, tts_generator=tts_generator)
+
+    # Initialize the conversation manager
+    conversation_manager = ConversationManager(system_prompt="You are a helpful assistant.", max_history=10)
 
     listen_and_process()

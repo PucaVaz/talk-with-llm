@@ -1,18 +1,8 @@
-from openai import OpenAI
 from pydub import AudioSegment
 import simpleaudio as sa
 import io
 import time
-from dotenv import load_dotenv
-import os
 import re
-
-# Load environment variables from a .env file
-load_dotenv()
-
-# Access environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 def play_audio(audio_data):
     try:
@@ -41,7 +31,7 @@ def play_audio(audio_data):
         print(f"An error occurred while playing audio: {e}")
 
 class TTSGenerator:
-    def __init__(self, client, tts_model="tts-1", voice="alloy", speed=1.25):
+    def __init__(self, client, tts_model="tts-1", voice="alloy", speed=1):
         """
         A class dedicated to generating TTS audio from text.
         """
@@ -103,22 +93,22 @@ class GPTTTSPlayer:
         else:
             self.tts_generator = tts_generator
 
-    def chat(self, prompt="Tell me the history of Brazil"):
+    def chat(self, messages):
         # Start the GPT chat completion stream
         stream = self.client.chat.completions.create(
             model=self.gpt_model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             stream=True,
-            max_tokens=28,
+            max_tokens=28, 
         )
 
+        assistant_response_text = ""
         # Process the GPT completion stream and generate TTS for each sentence
         for chunk in stream:
             if chunk.choices[0].delta.content:
                 content = chunk.choices[0].delta.content
+                assistant_response_text += content
                 self.text_buffer += content  # Accumulate the content in the text buffer
-                print(f"Accumulated Text Buffer: {self.text_buffer}")
-                
                 # Check for complete sentences in the text buffer
                 sentences = self.sentence_endings.split(self.text_buffer)
                 # The last element may be an incomplete sentence
@@ -136,22 +126,8 @@ class GPTTTSPlayer:
             self.process_sentence(remaining_text)
         self.text_buffer = ""
 
+        return assistant_response_text
+
     def process_sentence(self, sentence):
         # Use the TTSGenerator to generate and play the sentence
         self.tts_generator.generate_and_play(sentence)
-
-if __name__ == "__main__":
-    # Initialize the OpenAI client in the main section
-    client = OpenAI()
-
-    # Initialize TTSGenerator separately if needed
-    tts_generator = TTSGenerator(client, tts_model="tts-1", voice="alloy", speed=1.25)
-
-    # Create an instance of GPTTTSPlayer with the initialized client and TTSGenerator
-    player = GPTTTSPlayer(client, tts_generator=tts_generator)
-
-    # Provide a prompt or ask the user for input
-    prompt = input("Enter your prompt: ")
-
-    # Start the chat
-    player.chat(prompt)
