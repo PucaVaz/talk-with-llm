@@ -6,10 +6,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from speech_to_text.recognizer import AudioTranscriber
 from gpt_generator.prompt_generation import GPTTTSPlayer
-from audio.listen_and_process import listen_and_process
+from audio.listen_and_process import AudioProcessor
 from tts_generator import TTSGenerator
-from audio.listen import Listen
-from audio.process import ProcessAudio
 from conversation_manager import ConversationManager
 conversation_history = ""
 
@@ -20,7 +18,7 @@ def main():
     transcriber = AudioTranscriber()
 
     # Initialize TTSGenerator
-    tts_generator = TTSGenerator(client, tts_model="tts-1", voice="alloy", speed=1.25)
+    tts_generator = TTSGenerator(client, tts_model="tts-1", voice="alloy", speed=1)
 
     # Create an instance of GPTTTSPlayer with the initialized client and TTSGenerator  
     player = GPTTTSPlayer(client, tts_generator=tts_generator)
@@ -29,14 +27,15 @@ def main():
     conversation_manager = ConversationManager(system_prompt="You are a helpful assistant.", max_history=10)
 
     # Initialize the ProcessAudio class with the transcriber, player, and conversation manager
-    process_audio = ProcessAudio(transcriber, player, conversation_manager)
+    processor = AudioProcessor(
+        device_index=1,  # Set the appropriate audio device index, its is useful to use virtual audio devices
+        conversation_manager=conversation_manager,
+        transcriber=transcriber,
+        player=player
+    )
     
-    # Initialize the Listen class
-    listen = Listen()
-
-    # Start the main loop
-    listen_and_process(listen, process_audio)
-# Initialize the transcriber and GPT player at the beginning
-
+    # Start the listening and processing loop
+    processor.listen_and_process()
+    
 if __name__ == '__main__':  
     main()
