@@ -13,15 +13,17 @@ This project implements an AI-powered voice assistant that can transcribe speech
 ## Components
 
 1. `main.py`: The main script that orchestrates the voice assistant's functionality.
-2. `speech_to_txt.py`: Handles audio transcription using the Groq API.
-3. `openai_calls.py`: Manages interactions with the OpenAI API for language processing and text-to-speech synthesis.
+2. `speech_to_txt`: Handles audio transcription using the Groq API.
+3. `gpt_generator`: Manages interactions with the OpenAI API for language processing and text-to-speech synthesis.
+4. `tts_generator`: Generate voice using OpenAI client
+5. `conversation_manager`: Handles message history and defines the prompt
 
 ## Setup
 
 1. Clone the repository
 2. Install required dependencies:
-   ```
-   pip install pyaudio wave numpy pydub openai simpleaudio python-dotenv groq
+  ```
+   pip install -r requirements.txt
    ```
 3. Set up environment variables:
    - Create a `.env` file in the project root

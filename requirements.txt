@@ -1,0 +1,8 @@
+pyaudio
+wave
+numpy
+pydub
+openai
+simpleaudio
+python-dotenv
+groq
