@@ -5,3 +5,9 @@ data/*
 /.vscode/
 **/__pycache__/
 **/*.pyc
+src/audio/__pycache__/__init__.cpython-311.pyc
+src/audio/__pycache__/
+src/audio/*.pyc
+src/gpt_generator/__pycache__/prompt_generation.cpython-311.pyc
+src/gpt_generator/__pycache__/
+src/gpt_generator/*.pyc

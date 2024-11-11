@@ -23,6 +23,9 @@ def main():
     # Create an instance of GPTTTSPlayer with the initialized client and TTSGenerator  
     player = GPTTTSPlayer(client, tts_generator=tts_generator)
 
+
+    inicial_text = " olá pessoal do code"
+    tts_generator.generate_and_play(inicial_text)
     # Initialize the conversation manager
     conversation_manager = ConversationManager(system_prompt="You are a helpful assistant.", max_history=10)
 
